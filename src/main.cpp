@@ -1,11 +1,5 @@
-/// BASIC CONFIGURATION 
-
-#define ENABLE_WIFI_MANAGER  // if we want to have built-in wifi configuration
-                             // Otherwise direct connect ssid and pwd will be used
-                             // for Wifi manager need extra library //https://github.com/tzapu/WiFiManager
-
-#define ENABLE_WEB_SERVER    //if we want to have built in web server /site
-#define ENABLE_OTA  //if Over the air update need  , ENABLE_WEB_SERVER must be defined first
+#define ENABLE_WEB_SERVER   
+#define ENABLE_OTA  
 #include <Arduino.h>
 
 
@@ -27,10 +21,8 @@
  ESP8266WebServer server(80);
 #endif
 
-#ifdef ESP32
 #include <WebServer.h>
 WebServer server(80);
-#endif
 #endif 
 
 #if defined(ESP32) && defined(ENABLE_OTA)
@@ -42,17 +34,14 @@ WebServer server(80);
 bool isWebserver_started=false;
 #endif 
 
-const int relay_gpio=15;
+const int relay_gpio_1=15;
+const int relay_gpio_2=2;
+const int relay_gpio_3=4;
+const int relay_gpio_4=18;
+const int relay_gpio_5=19;
+const int relay_gpio_6=21;
 
-
-#ifdef ENABLE_WIFI_MANAGER
-#include <WiFiManager.h>        //https://github.com/tzapu/WiFiManager
-#endif
-
-
-
-
-
+#include <WiFiManager.h>        
 
 const char* HOSTNAME="ES";
 const char* ssid     = "Aliyu";
@@ -66,24 +55,35 @@ extern "C"{
 #endif
 
 
+homekit_service_t* hapservice_1={0};
+homekit_service_t* hapservice_2={0};
+homekit_service_t* hapservice_3={0};
+homekit_service_t* hapservice_4={0};
+homekit_service_t* hapservice_5={0};
+homekit_service_t* hapservice_6={0};
 
-
-homekit_service_t* hapservice={0};
 
 String pair_file_name="/pair.dat";
 
 
 
-void switch_callback(homekit_characteristic_t *ch, homekit_value_t value, void *context);
+void switch_callback_1(homekit_characteristic_t *ch, homekit_value_t value, void *context);
+void switch_callback_2(homekit_characteristic_t *ch, homekit_value_t value, void *context);
+void switch_callback_3(homekit_characteristic_t *ch, homekit_value_t value, void *context);
+void switch_callback_4(homekit_characteristic_t *ch, homekit_value_t value, void *context);
+void switch_callback_5(homekit_characteristic_t *ch, homekit_value_t value, void *context);
+void switch_callback_6(homekit_characteristic_t *ch, homekit_value_t value, void *context);
+
+
 //Web server section
 #define ENABLE_OTA  //if OTA need
 
 #include "spiffs_webserver.h"
 
 
-bool getSwitchVal(){
-  if(hapservice){
-      homekit_characteristic_t * ch= homekit_service_characteristic_by_type(hapservice, HOMEKIT_CHARACTERISTIC_ON);
+bool getSwitchVal_1(){
+  if(hapservice_1){
+      homekit_characteristic_t * ch= homekit_service_characteristic_by_type(hapservice_1, HOMEKIT_CHARACTERISTIC_ON);
       if(ch){
         return ch->value.bool_value;
       }
@@ -91,20 +91,165 @@ bool getSwitchVal(){
     return false;
 }
 
-
-void handleGetVal(){
-    server.send(200, FPSTR(TEXT_PLAIN), getSwitchVal()?"1":"0");
+bool getSwitchVal_2(){
+  if(hapservice_2){
+      homekit_characteristic_t * ch= homekit_service_characteristic_by_type(hapservice_2, HOMEKIT_CHARACTERISTIC_ON);
+      if(ch){
+        return ch->value.bool_value;
+      }
+    }
+    return false;
 }
 
-void set_switch(bool val){
-   Serial.println(String("set_switch:")+String(val?"True":"False")); 
-  digitalWrite(relay_gpio, val?HIGH:LOW);
+bool getSwitchVal_3(){
+  if(hapservice_3){
+      homekit_characteristic_t * ch= homekit_service_characteristic_by_type(hapservice_3, HOMEKIT_CHARACTERISTIC_ON);
+      if(ch){
+        return ch->value.bool_value;
+      }
+    }
+    return false;
+}
+
+bool getSwitchVal_4(){
+  if(hapservice_4){
+      homekit_characteristic_t * ch= homekit_service_characteristic_by_type(hapservice_4, HOMEKIT_CHARACTERISTIC_ON);
+      if(ch){
+        return ch->value.bool_value;
+      }
+    }
+    return false;
+}
+
+bool getSwitchVal_5(){
+  if(hapservice_5){
+      homekit_characteristic_t * ch= homekit_service_characteristic_by_type(hapservice_5, HOMEKIT_CHARACTERISTIC_ON);
+      if(ch){
+        return ch->value.bool_value;
+      }
+    }
+    return false;
+}
+
+bool getSwitchVal_6(){
+  if(hapservice_6){
+      homekit_characteristic_t * ch= homekit_service_characteristic_by_type(hapservice_6, HOMEKIT_CHARACTERISTIC_ON);
+      if(ch){
+        return ch->value.bool_value;
+      }
+    }
+    return false;
+}
+
+void handleGetVal(){
+    server.send(200, FPSTR(TEXT_PLAIN), getSwitchVal_1()?"1":"0");
+    server.send(200, FPSTR(TEXT_PLAIN), getSwitchVal_2()?"1":"0");
+    server.send(200, FPSTR(TEXT_PLAIN), getSwitchVal_3()?"1":"0");
+    server.send(200, FPSTR(TEXT_PLAIN), getSwitchVal_4()?"1":"0");
+    server.send(200, FPSTR(TEXT_PLAIN), getSwitchVal_5()?"1":"0");
+    server.send(200, FPSTR(TEXT_PLAIN), getSwitchVal_6()?"1":"0");
+}
+
+void set_switch_1(bool val){
+   Serial.println(String("set_switch_1:")+String(val?"True":"False")); 
+  digitalWrite(relay_gpio_1, val?HIGH:LOW);
   //we need notify apple about changes
   
-  if(hapservice){
-    Serial.println("notify hap"); 
+  if(hapservice_1){
+    Serial.println("notify hap 1"); 
     //getting on/off characteristic
-    homekit_characteristic_t * ch= homekit_service_characteristic_by_type(hapservice, HOMEKIT_CHARACTERISTIC_ON);
+    homekit_characteristic_t * ch= homekit_service_characteristic_by_type(hapservice_1, HOMEKIT_CHARACTERISTIC_ON);
+    if(ch){
+        
+        if(ch->value.bool_value!=val){  //wil notify only if different
+          ch->value.bool_value=val;
+          homekit_characteristic_notify(ch,ch->value);
+        }
+    }
+  }
+}
+void set_switch_2(bool val){
+   Serial.println(String("set_switch_2:")+String(val?"True":"False")); 
+  digitalWrite(relay_gpio_2, val?HIGH:LOW);
+  //we need notify apple about changes
+  
+  if(hapservice_2){
+    Serial.println("notify hap 2"); 
+    //getting on/off characteristic
+    homekit_characteristic_t * ch= homekit_service_characteristic_by_type(hapservice_2, HOMEKIT_CHARACTERISTIC_ON);
+    if(ch){
+        
+        if(ch->value.bool_value!=val){  //wil notify only if different
+          ch->value.bool_value=val;
+          homekit_characteristic_notify(ch,ch->value);
+        }
+    }
+  }
+}
+
+void set_switch_3(bool val){
+   Serial.println(String("set_switch_3:")+String(val?"True":"False")); 
+  digitalWrite(relay_gpio_3, val?HIGH:LOW);
+  //we need notify apple about changes
+  
+  if(hapservice_3){
+    Serial.println("notify hap 3"); 
+    //getting on/off characteristic
+    homekit_characteristic_t * ch= homekit_service_characteristic_by_type(hapservice_3, HOMEKIT_CHARACTERISTIC_ON);
+    if(ch){
+        
+        if(ch->value.bool_value!=val){  //wil notify only if different
+          ch->value.bool_value=val;
+          homekit_characteristic_notify(ch,ch->value);
+        }
+    }
+  }
+}
+void set_switch_4(bool val){
+   Serial.println(String("set_switch_4:")+String(val?"True":"False")); 
+  digitalWrite(relay_gpio_4, val?HIGH:LOW);
+  //we need notify apple about changes
+  
+  if(hapservice_4){
+    Serial.println("notify hap 4"); 
+    //getting on/off characteristic
+    homekit_characteristic_t * ch= homekit_service_characteristic_by_type(hapservice_4, HOMEKIT_CHARACTERISTIC_ON);
+    if(ch){
+        
+        if(ch->value.bool_value!=val){  //wil notify only if different
+          ch->value.bool_value=val;
+          homekit_characteristic_notify(ch,ch->value);
+        }
+    }
+  }
+}
+void set_switch_5(bool val){
+   Serial.println(String("set_switch_5:")+String(val?"True":"False")); 
+  digitalWrite(relay_gpio_5, val?HIGH:LOW);
+  //we need notify apple about changes
+  
+  if(hapservice_5){
+    Serial.println("notify hap 5"); 
+    //getting on/off characteristic
+    homekit_characteristic_t * ch= homekit_service_characteristic_by_type(hapservice_5, HOMEKIT_CHARACTERISTIC_ON);
+    if(ch){
+        
+        if(ch->value.bool_value!=val){  //wil notify only if different
+          ch->value.bool_value=val;
+          homekit_characteristic_notify(ch,ch->value);
+        }
+    }
+  }
+}
+void set_switch_6(bool val){
+   Serial.println(String("set_switch_6:")+String(val?"True":"False")); 
+  digitalWrite(relay_gpio_6, val?HIGH:LOW);
+  //we need notify apple about changes
+  
+  if(hapservice_6){
+    Serial.println("notify hap 6"); 
+    //getting on/off characteristic
+    homekit_characteristic_t * ch= homekit_service_characteristic_by_type(hapservice_6, HOMEKIT_CHARACTERISTIC_ON);
     if(ch){
         
         if(ch->value.bool_value!=val){  //wil notify only if different
@@ -122,14 +267,51 @@ void handleSetVal(){
   }
   //to do analyze
   if(server.arg("var") == "ch1"){
-    if(hapservice){
+    if(hapservice_1){
 
-      homekit_characteristic_t * ch= homekit_service_characteristic_by_type(hapservice, HOMEKIT_CHARACTERISTIC_ON);
+      homekit_characteristic_t * ch= homekit_service_characteristic_by_type(hapservice_1, HOMEKIT_CHARACTERISTIC_ON);
       if(ch){
-        set_switch(server.arg("val")=="true");
+        set_switch_1(server.arg("val")=="true");
+      }
+    }
+   else if(hapservice_2){
+
+      homekit_characteristic_t * ch= homekit_service_characteristic_by_type(hapservice_2, HOMEKIT_CHARACTERISTIC_ON);
+      if(ch){
+        set_switch_2(server.arg("val")=="true");
+      }
+    }
+
+    else if(hapservice_3){
+
+      homekit_characteristic_t * ch= homekit_service_characteristic_by_type(hapservice_3, HOMEKIT_CHARACTERISTIC_ON);
+      if(ch){
+        set_switch_3(server.arg("val")=="true");
+      }
+    }
+    else if(hapservice_4){
+
+      homekit_characteristic_t * ch= homekit_service_characteristic_by_type(hapservice_4, HOMEKIT_CHARACTERISTIC_ON);
+      if(ch){
+        set_switch_4(server.arg("val")=="true");
+      }
+    }
+    else if(hapservice_5){
+
+      homekit_characteristic_t * ch= homekit_service_characteristic_by_type(hapservice_5, HOMEKIT_CHARACTERISTIC_ON);
+      if(ch){
+        set_switch_5(server.arg("val")=="true");
+      }
+    }
+    else if(hapservice_6){
+
+      homekit_characteristic_t * ch= homekit_service_characteristic_by_type(hapservice_6, HOMEKIT_CHARACTERISTIC_ON);
+      if(ch){
+        set_switch_6(server.arg("val")=="true");
       }
     }
   }
+
 }
 
 
@@ -172,11 +354,32 @@ void storage_changed(char * szstorage,int bufsize){
 }
 //can be used for any logic, it will automatically inform Apple about state changes
 
-void switch_callback(homekit_characteristic_t *ch, homekit_value_t value, void *context) {
-    Serial.println("switch_callback");
- set_switch(ch->value.bool_value);
+void switch_callback_1(homekit_characteristic_t *ch, homekit_value_t value, void *context) {
+    Serial.println("switch_callback_1");
+ set_switch_1(ch->value.bool_value);
 }
-#ifdef ENABLE_WIFI_MANAGER
+
+void switch_callback_2(homekit_characteristic_t *ch, homekit_value_t value, void *context) {
+    Serial.println("switch_callback_2");
+ set_switch_2(ch->value.bool_value);
+}
+void switch_callback_3(homekit_characteristic_t *ch, homekit_value_t value, void *context) {
+    Serial.println("switch_callback_3");
+ set_switch_3(ch->value.bool_value);
+}
+void switch_callback_4(homekit_characteristic_t *ch, homekit_value_t value, void *context) {
+    Serial.println("switch_callback_4");
+ set_switch_4(ch->value.bool_value);
+}
+void switch_callback_5(homekit_characteristic_t *ch, homekit_value_t value, void *context) {
+    Serial.println("switch_callback_5");
+ set_switch_5(ch->value.bool_value);
+}
+void switch_callback_6(homekit_characteristic_t *ch, homekit_value_t value, void *context) {
+    Serial.println("switch_callback_6");
+ set_switch_6(ch->value.bool_value);
+}
+//#ifdef ENABLE_WIFI_MANAGER
 void startwifimanager() {
   WiFiManager wifiManager;
 
@@ -212,7 +415,12 @@ void setup() {
     // Serial.println(system_get_free_heap_size());
 
 
-    pinMode(relay_gpio, OUTPUT);
+    pinMode(relay_gpio_1, OUTPUT);
+    pinMode(relay_gpio_2, OUTPUT);
+    pinMode(relay_gpio_3, OUTPUT);
+    pinMode(relay_gpio_4, OUTPUT);
+    pinMode(relay_gpio_5, OUTPUT);
+    pinMode(relay_gpio_6, OUTPUT);
 
     
     init_hap_storage();
@@ -226,7 +434,12 @@ void setup() {
     hap_initbase_accessory_service("host","Aliyu ","0","EspHapSwitch","1.0");
 
    //we will add only one light bulb service and keep pointer for nest using
-    hapservice= hap_add_switch_service("Switch",switch_callback,(void*)&relay_gpio);
+    hapservice_1= hap_add_switch_service("Switch 1",switch_callback_1,(void*)&relay_gpio_1);
+    hapservice_2= hap_add_switch_service("Switch 2",switch_callback_2,(void*)&relay_gpio_2);
+    hapservice_3= hap_add_switch_service("Switch 3",switch_callback_3,(void*)&relay_gpio_3);
+    hapservice_4= hap_add_switch_service("Switch 4",switch_callback_4,(void*)&relay_gpio_4);
+    hapservice_5= hap_add_switch_service("Switch 5",switch_callback_5,(void*)&relay_gpio_5);
+    hapservice_6= hap_add_switch_service("Switch 6",switch_callback_6,(void*)&relay_gpio_6);
 
 #ifdef ENABLE_WIFI_MANAGER   
    startwifimanager();
@@ -280,4 +493,4 @@ if(isWebserver_started)
 
 }
 
-#endif
+//#endif
